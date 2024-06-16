@@ -1,10 +1,13 @@
 package com.jwt.util.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -17,7 +20,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class JWTService {
 
-    private static final String SECRET_KEY = "ciS8MZoTF8RDMphU23z3C9Gn4UbHqjLOAqb3uG8ctiWEwb4H3FHNu0h11t9srnCcBnBWWN+3emZRYnahciB7BQ==";
+    @Value("${jwt.secret.key}")
+    private String secretKey;
+
     private static final long VALIDITY_DURATION = TimeUnit.MINUTES.toMillis(10);
 
     public String generateJWT(String username) {
@@ -34,18 +39,14 @@ public class JWTService {
         return jwt;
     }
 
-    private static SecretKey getSecretKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public boolean validateJWT(String jwtToken) {
+        Claims claims = Jwts.parser().verifyWith(getSecretKey()).build().parseSignedClaims(jwtToken).getPayload();
+        return claims.getExpiration().after(Date.from(Instant.now()));
+
     }
 
-    public boolean validateJWT(String jwtToken) {
-        try {
-            Claims claims = Jwts.parser().verifyWith(getSecretKey()).build().parseSignedClaims(jwtToken).getPayload();
-            return claims.getExpiration().after(Date.from(Instant.now()));
-        } catch (SignatureException e) {
-            log.error("JWT is tampered");
-            return false;
-        }
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
