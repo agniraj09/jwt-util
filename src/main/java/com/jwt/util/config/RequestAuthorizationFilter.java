@@ -36,13 +36,7 @@ public class RequestAuthorizationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } else {
             try {
-                String authHeader = request.getHeader("Authorization");
-                if (null == authHeader || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
-                    throw new JwtException("JWT token missing. Request is unauthorized");
-                }
-                String jwtToken = authHeader.substring(7);
-
-                boolean isValid = jwtService.validateJWT(jwtToken);
+                boolean isValid = validateJWTToken(request);
 
                 if (isValid) {
                     filterChain.doFilter(request, response);
@@ -57,5 +51,14 @@ public class RequestAuthorizationFilter extends OncePerRequestFilter {
                 response.getWriter().write(objectMapper.writeValueAsString(detail));
             }
         }
+    }
+
+    private boolean validateJWTToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (null == authHeader || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
+            throw new JwtException("JWT token missing. Request is unauthorized");
+        }
+        String jwtToken = authHeader.substring(7);
+        return jwtService.validateJWT(jwtToken);
     }
 }

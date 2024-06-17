@@ -27,7 +27,7 @@ public class JWTService {
 
     public String generateJWT(String username) {
         String jwt = Jwts.builder()
-                .header().add("Content-type", "encoded")
+                .header().add("typ", "JWT")
                 .and()
                 .subject(username)
                 .issuedAt(Date.from(Instant.now()))
