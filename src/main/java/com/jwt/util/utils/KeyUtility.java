@@ -7,9 +7,8 @@ import java.util.Base64;
 
 public class KeyUtility {
 
-    public static final String getSecretKey() {
+    public static String getSecretKey() {
         SecretKey key = Jwts.SIG.HS512.key().build();
-        String encodedKey = Base64.getEncoder().encodeToString(key.getEncoded());
-        return encodedKey;
+        return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 }
